@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
 //				response += "\n";
 //				response += "\n";
 			}
-			usleep(1000);
+			usleep(200);
 			unsigned int bytesSend = send(fd, response.c_str(), response.size(), 0);
 			if(bytesSend != response.size()) {
 				std::cout << "Sending error, aborting\n";
