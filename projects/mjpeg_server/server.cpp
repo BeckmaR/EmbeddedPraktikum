@@ -1,11 +1,14 @@
 /*
-/* server.c */
+ /* server.c */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <time.h>
+#include <iostream>
+
+#include "mjpeg.h"
 
 #ifdef _WIN32
 /* Headerfiles für Windows */
@@ -23,15 +26,15 @@
 #endif
 
 /* Portnummer */
-#define PORT 1234
+#define PORT 1235
 
 /* Puffer für eingehende Nachrichten */
 #define RCVBUFSIZE 1024
 
 #ifdef _WIN32
-   static void echo(SOCKET);
+static void echo(SOCKET);
 #else
-   static void echo( int );
+static void echo(int);
 #endif
 
 static void error_exit(char *errorMessage);
@@ -43,18 +46,16 @@ static void echo(SOCKET client_socket)
 #else
 static void echo(int client_socket)
 #endif
-{
-    char echo_buffer[RCVBUFSIZE];
-    int recv_size;
-    time_t zeit;
+		{
+	char echo_buffer[RCVBUFSIZE];
+	int recv_size;
+	time_t zeit;
 
-    if((recv_size =
-            recv(client_socket, echo_buffer, RCVBUFSIZE,0)) < 0)
-        error_exit("Fehler bei recv()");
-    echo_buffer[recv_size] = '\0';
-    time(&zeit);
-    printf("Nachrichten vom Client : %s \t%s",
-            echo_buffer, ctime(&zeit));
+	if ((recv_size = recv(client_socket, echo_buffer, RCVBUFSIZE, 0)) < 0)
+		error_exit("Fehler bei recv()");
+	echo_buffer[recv_size] = '\0';
+	time(&zeit);
+	printf("Nachrichten vom Client : %s \t%s", echo_buffer, ctime(&zeit));
 }
 
 /* Die Funktion gibt den aufgetretenen Fehler aus und
@@ -62,85 +63,131 @@ static void echo(int client_socket)
 static void error_exit(char *error_message) {
 
 #ifdef _WIN32
-    fprintf(stderr,"%s: %d\n", error_message, WSAGetLastError());
+	fprintf(stderr,"%s: %d\n", error_message, WSAGetLastError());
 #else
-    fprintf(stderr, "%s: %s\n", error_message, strerror(errno));
+	fprintf(stderr, "%s: %s\n", error_message, strerror(errno));
 #endif
 
-    exit(EXIT_FAILURE);
+	exit(EXIT_FAILURE);
 }
 
-int main( int argc, char *argv[]) {
-    struct sockaddr_in server, client;
-
-#ifdef _WIN32
-    SOCKET sock, fd;
-#else
-    int sock, fd;
-#endif
-
-    unsigned int len;
-
-#ifdef _WIN32
-    /* Initialisiere TCP für Windows ("winsock"). */
-    WORD wVersionRequested;
-    WSADATA wsaData;
-    wVersionRequested = MAKEWORD (1, 1);
-    if (WSAStartup (wVersionRequested, &wsaData) != 0)
-        error_exit( "Fehler beim Initialisieren von Winsock");
-    else
-        printf("Winsock initialisiert\n");
-#endif
-
-    /* Erzeuge das Socket. */
-    sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (sock < 0)
-        error_exit("Fehler beim Anlegen eines Sockets");
-
-    /* Erzeuge die Socketadresse des Servers. */
-    memset( &server, 0, sizeof (server));
-    /* IPv4-Verbindung */
-    server.sin_family = AF_INET;
-    /* INADDR_ANY: jede IP-Adresse annehmen */
-    server.sin_addr.s_addr = htonl(INADDR_ANY);
-    /* Portnummer */
-    server.sin_port = htons(PORT);
-
-    /* Erzeuge die Bindung an die Serveradresse
-     * (genauer: an einen bestimmten Port). */
-    if(bind(sock,(struct sockaddr*)&server, sizeof( server)) < 0)
-        error_exit("Kann das Socket nicht \"binden\"");
-
-    /* Teile dem Socket mit, dass Verbindungswünsche
-     * von Clients entgegengenommen werden. */
-    if(listen(sock, 5) == -1 )
-         error_exit("Fehler bei listen");
-
-    printf("Server bereit - wartet auf Anfragen ...\n");
-    /* Bearbeite die Verbindungswünsche von Clients
-     * in einer Endlosschleife.
-     * Der Aufruf von accept() blockiert so lange,
-     * bis ein Client Verbindung aufnimmt. */
-    for (;;) {
-        len = sizeof(client);
-        fd = accept(sock, (struct sockaddr*)&client, &len);
-        if (fd < 0)
-            error_exit("Fehler bei accept");
-        printf("Bearbeite den Client mit der Adresse: %s\n",
-           inet_ntoa(client.sin_addr));
-        /* Daten vom Client auf dem Bildschirm ausgeben */
-        echo( fd );
-
-        /* Schließe die Verbindung. */
-#ifdef _WIN32
-        closesocket(fd);
-#else
-        close(fd);
-#endif
-    }
-    return EXIT_SUCCESS;
+std::string intToString(int i) {
+	std::stringstream ss;
+	ss << i;
+	return ss.str();
 }
 
+int main(int argc, char *argv[]) {
+	struct sockaddr_in server, client;
 
+#ifdef _WIN32
+	SOCKET sock, fd;
+#else
+	int sock, fd;
+#endif
 
+	unsigned int len;
+
+#ifdef _WIN32
+	/* Initialisiere TCP für Windows ("winsock"). */
+	WORD wVersionRequested;
+	WSADATA wsaData;
+	wVersionRequested = MAKEWORD (1, 1);
+	if (WSAStartup (wVersionRequested, &wsaData) != 0)
+	error_exit( "Fehler beim Initialisieren von Winsock");
+	else
+	printf("Winsock initialisiert\n");
+#endif
+
+	/* Erzeuge das Socket. */
+	sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (sock < 0)
+		error_exit("Fehler beim Anlegen eines Sockets");
+
+	/* Erzeuge die Socketadresse des Servers. */
+	memset(&server, 0, sizeof(server));
+	/* IPv4-Verbindung */
+	server.sin_family = AF_INET;
+	/* INADDR_ANY: jede IP-Adresse annehmen */
+	server.sin_addr.s_addr = htonl(INADDR_ANY);
+	/* Portnummer */
+	server.sin_port = htons(PORT);
+
+	/* Erzeuge die Bindung an die Serveradresse
+	 * (genauer: an einen bestimmten Port). */
+	if (bind(sock, (struct sockaddr*) &server, sizeof(server)) < 0)
+		error_exit("Kann das Socket nicht \"binden\"");
+
+	/* Teile dem Socket mit, dass Verbindungswünsche
+	 * von Clients entgegengenommen werden. */
+	if (listen(sock, 5) == -1)
+		error_exit("Fehler bei listen");
+
+	printf("Server bereit - wartet auf Anfragen ...\n");
+	/* Bearbeite die Verbindungswünsche von Clients
+	 * in einer Endlosschleife.
+	 * Der Aufruf von accept() blockiert so lange,
+	 * bis ein Client Verbindung aufnimmt. */
+	for (;;) {
+		len = sizeof(client);
+		fd = accept(sock, (struct sockaddr*) &client, &len);
+		Mjpeg mjpeg(0);
+		if (fd < 0)
+			error_exit("Fehler bei accept");
+		printf("Bearbeite den Client mit der Adresse: %s\n",
+				inet_ntoa(client.sin_addr));
+		/* Daten vom Client auf dem Bildschirm ausgeben */
+		//echo(fd);
+		bool header = true;
+		bool alive = true;
+		while(alive) {
+			std::vector<uchar> img = mjpeg.getJpegImage();
+			std::string jpegString;
+
+			for(unsigned int i=0; i<img.size(); i++) {
+				jpegString += img.at(i);
+			}
+
+			std::stringstream imgsize;
+			imgsize << (jpegString.size());
+
+			std::string response = "";
+			if(header) {
+				response += "HTTP/1.1 200 OK\n";
+				response += "Server: en.code-bude.net example server\n";
+				response +=	"Cache-Control: no-cache\n";
+				response += "Cache-Control: private\n";
+				response += "Content-Type: multipart/x-mixed-replace;boundary=--boundary\n";
+				response += "\n";
+				header = false;
+			} else {
+				response += "--boundary\n";
+				response += "Content-Type: image/jpeg\n";
+				response += "Content-Length: " + imgsize.str() + "\n";
+				response += "\n";
+				std::cout << response;
+				response += jpegString;
+//				response += "\n";
+//				response += "\n";
+			}
+			usleep(1000);
+			unsigned int bytesSend = send(fd, response.c_str(), response.size(), 0);
+			if(bytesSend != response.size()) {
+				std::cout << "Sending error, aborting\n";
+				alive = false;
+			} else {
+				std::cout << "Sending successfully\n";
+			}
+			std::cout << jpegString.size() << "\n";
+		}
+
+		/* Schließe die Verbindung. */
+#ifdef _WIN32
+		closesocket(fd);
+#else
+		close(fd);
+#endif
+	}
+	return EXIT_SUCCESS;
+}
 
