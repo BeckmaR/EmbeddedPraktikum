@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
 			error_exit("Fehler bei accept");
 		printf("Bearbeite den Client mit der Adresse: %s\n",
 				inet_ntoa(client.sin_addr));
-		respond(fd, std::string("index.html"));
+		respond(fd, std::string(""));
 
 		/* Schließe die Verbindung. */
 
