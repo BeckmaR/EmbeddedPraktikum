@@ -1,0 +1,117 @@
+#include "driveSim.h"
+
+#define STEERING_STEP 15
+
+
+driveSim::driveSim(std::string address) :
+	client(address)
+{
+	std::vector<std::string> commands;
+	commands.push_back("Driver_SetDynamicLongitude 1");
+	commands.push_back("Driver_SetDynamicLateral 1");
+	client.sendCmd(commands);
+}
+
+driveSim::~driveSim()
+{
+}
+
+void driveSim::accelerate()
+{	
+	brakeforce = 0;
+	acceleration = getAccel();
+	acceleration += 10;
+	if(acceleration > 100) {
+		acceleration = 100;
+	}
+	setBrakeforce(brakeforce);
+	setAccel(acceleration);
+}
+
+
+void driveSim::brake()
+{
+	acceleration = 0;
+	brakeforce = getBrakeforce();
+	brakeforce += 10;
+	if(brakeforce > 100) {
+		brakeforce = 100;
+	}
+	setBrakeforce(brakeforce);
+	setAccel(acceleration);
+}
+
+void driveSim::steerLeft()
+{
+	steeringAngle = getSteeringAngle();
+	steeringAngle -= STEERING_STEP;
+	if(steeringAngle < -180) {
+		steeringAngle = -180;
+	}
+	setSteeringAngle(steeringAngle);
+}
+
+
+void driveSim::steerRight()
+{
+	steeringAngle = getSteeringAngle();
+	steeringAngle += STEERING_STEP;
+	if(steeringAngle > 180) {
+		steeringAngle = 180;
+	}
+	setSteeringAngle(steeringAngle);
+}
+
+float driveSim::getAccel()
+{
+	std::vector<std::string> results = sendCmd("Driver_GetAccelereratorPedal");
+	acceleration = std::atof(results[0].c_str());
+	return acceleration;
+}
+
+float driveSim::getBrakeforce()
+{
+	std::vector<std::string> results = sendCmd("Driver_GetBrakePedal");
+	brakeforce = std::atof(results[0].c_str());
+	return brakeforce;
+}
+
+float driveSim::getSteeringAngle()
+{
+	std::vector<std::string> results = sendCmd("Driver_GetSteeringWheel");
+	steeringAngle = std::atof(results[0].c_str());
+	return steeringAngle;
+}
+
+void driveSim::setAccel(float a)
+{
+	std::ostringstream ss;
+	ss << a;
+	
+	sendCmd("Driver_SetAccelerationPedal " + ss.str());
+}
+
+void driveSim::setBrakeforce(float b)
+{
+	std::ostringstream ss;
+	ss << (int)b;
+	
+	sendCmd("Driver_SetBrake " + ss.str());
+}
+
+void driveSim::setSteeringAngle(float a)
+{
+	std::ostringstream ss;
+	ss << a;
+	
+	sendCmd("Driver_SetSteeringWheel " + ss.str());
+}
+
+std::vector<std::string> driveSim::sendCmd(std::string cmd)
+{
+	std::vector<std::string> commands;
+	commands.push_back(cmd);
+	return client.sendCmd(commands);
+}
+
+

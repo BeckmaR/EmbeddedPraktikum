@@ -1,2 +1,40 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<TITLE>A study of population dynamicsss</TITLE>
+<TITLE>Fahrsimulator</TITLE>
+<head>
+<style>
+.button {
+	width: 50;
+	height: 50;
+	margin: 20;
+	background: black;
+	float: left;
+}
+</style>
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+
+<body>
+<div style="width: 100%;">
+  <div style="width: 50%; margin: auto;">
+    <img src="http://192.168.17.110:1235" alt="WebCam Image not available" style="margin: auto;"></img>
+  </div>
+  <div style="width: 50%; margin: auto;">
+    <div class="button" onclick="sendRequest();"></div>
+    <div class="button" onclick="sendRequest();"></div>
+    <div class="button" onclick="sendRequest();"></div>   
+    <div class="button" onclick="sendRequest();"></div>
+  </div>
+</div>
+</body>
+
+<script type="text/javascript">
+function sendRequest(sub) {
+	$.ajax({
+		url: "http://127.0.0.1:1234/" + sub,
+		type: "GET",
+		data: {},
+		}).done(function (data) {
+			alert("Sheba done!")});
+}
+</script>
+

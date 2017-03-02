@@ -1,0 +1,21 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <signal.h>
+
+class GPIO {
+public:
+	GPIO(int gpioChannel);
+	~GPIO();
+	int set_gpio_direction(int gpio_base, int nchannel, char *direction);
+	int open_gpio_channel(int gpio_base);
+	int get_gpio_value();
+private:
+	int nchannel;
+	int gpio_base;
+	int priv_get_gpio_value(int gpio_base, int nchannel);
+};
+	
